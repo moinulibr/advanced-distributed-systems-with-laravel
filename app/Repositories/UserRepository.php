@@ -8,6 +8,28 @@ use Illuminate\Support\Facades\DB;
 
 class UserRepository implements UserRepositoryInterface
 {
+    
+    /**
+     * Aggregates users from all shards with simple pagination
+     */
+    public function allUsers($perPage = 15)
+    {
+        $allUsers = collect();
+
+        foreach (ShardingService::getAllShards() as $shard) {
+            $users = DB::connection($shard)->table('users')
+                ->orderBy('created_at', 'desc')
+                ->limit($perPage) // Each shard will contribute some data
+                ->get();
+
+            $allUsers = $allUsers->concat($users);
+        }
+
+        // Sort globally by creation date and take the required amount
+        return $allUsers->sortByDesc('created_at')->values()->all();
+    }
+
+
     /**
      * Search user by phone across all shards
      */

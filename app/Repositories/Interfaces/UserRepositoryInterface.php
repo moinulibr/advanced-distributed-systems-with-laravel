@@ -8,6 +8,7 @@ namespace App\Repositories\Interfaces;
  */
 interface UserRepositoryInterface
 {
+    public function allUsers($perPage);
     public function findByPhone(string $phone);
     public function findByEmail(string $email);
     public function create(array $data);
