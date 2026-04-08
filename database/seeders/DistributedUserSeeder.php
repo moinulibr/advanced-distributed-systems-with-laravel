@@ -38,7 +38,7 @@ class DistributedUserSeeder extends Seeder
 
             // Skip if the phone number format is still invalid after sanitization
             if (!$cleanPhone) {
-                Log::warning("Invalid format skipped: $rawPhone");
+                //Log::warning("Invalid format skipped: $rawPhone");
                 continue;
             }
 
