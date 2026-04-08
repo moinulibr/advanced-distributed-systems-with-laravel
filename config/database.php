@@ -44,11 +44,21 @@ return [
             'transaction_mode' => 'DEFERRED',
         ],
 
+        //database migration generator command :  
+        //php artisan migrate --database=mysql_shard_1
+        //php artisan migrate --database=mysql_shard_2
+        //php artisan migrate --database=mysql_shard_3
         'mysql_shard_1' => [
             'driver' => 'mysql',
             'host' => env('DB_HOST_SHARD_1', '127.0.0.1'),
             'port' => env('DB_PORT', '3306'),
-            'database' => env('DB_DATABASE_SHARD_1', 'ads_shard_no_1'),
+            #'database' => env('DB_DATABASE_SHARD_1', 'ads_shard_no_1'),
+            'write' => [
+                'database' => env('DB_DATABASE_SHARD_1', 'ads_shard_no_1'),
+            ],
+            'read' => [
+                'database' => env('DB_DATABASE_SHARD_1_REPLICA', 'ads_shard_no_1_replica'),
+            ],
             'username' => env('DB_USERNAME', 'root'),
             'password' => env('DB_PASSWORD', ''),
             'charset' => 'utf8mb4',
@@ -60,7 +70,13 @@ return [
             'driver' => 'mysql',
             'host' => env('DB_HOST_SHARD_2', '127.0.0.1'),
             'port' => env('DB_PORT', '3306'),
-            'database' => env('DB_DATABASE_SHARD_2', 'ads_shard_no_2'),
+            #'database' => env('DB_DATABASE_SHARD_2', 'ads_shard_no_2'),
+            'write' => [
+                'database' => env('DB_DATABASE_SHARD_2', 'ads_shard_no_2'),
+            ],
+            'read' => [
+                'database' => env('DB_DATABASE_SHARD_2_REPLICA', 'ads_shard_no_2_replica'),
+            ],
             'username' => env('DB_USERNAME', 'root'),
             'password' => env('DB_PASSWORD', ''),
             // ... same as above
@@ -71,12 +87,60 @@ return [
             'driver' => 'mysql',
             'host' => env('DB_HOST_SHARD_3', '127.0.0.1'),
             'port' => env('DB_PORT', '3306'),
-            'database' => env('DB_DATABASE_SHARD_3', 'ads_shard_no_3'),
+            #'database' => env('DB_DATABASE_SHARD_3', 'ads_shard_no_3'),
+            'write' => [
+                'database' => env('DB_DATABASE_SHARD_3', 'ads_shard_no_3'),
+            ],
+            'read' => [
+                'database' => env('DB_DATABASE_SHARD_3_REPLICA', 'ads_shard_no_3_replica'),
+            ],
             'username' => env('DB_USERNAME', 'root'),
             'password' => env('DB_PASSWORD', ''),
             // ... same as above
         ],
 
+        //replica database migration generator command :  
+        //php artisan migrate --database=mysql_shard_1_replica_migrator
+        //php artisan migrate --database=mysql_shard_2_replica_migrator
+        //php artisan migrate --database=mysql_shard_3_replica_migrator
+        'mysql_shard_1_replica_migrator' => [
+            'driver' => 'mysql',
+            'host' => env('DB_HOST_SHARD_1', '127.0.0.1'),
+            'port' => env('DB_PORT', '3307'),
+            'database' => env('DB_DATABASE_SHARD_1_REPLICA', 'ads_shard_no_1_replica'),
+            'username' => env('DB_USERNAME', 'root'),
+            'password' => env('DB_PASSWORD', ''),
+        ],
+
+        'mysql_shard_2_replica_migrator' => [
+            'driver' => 'mysql',
+            'host' => env('DB_HOST_SHARD_2', '127.0.0.1'),
+            'port' => env('DB_PORT', '3307'),
+            'database' => env('DB_DATABASE_SHARD_2_REPLICA', 'ads_shard_no_2_replica'),
+            'username' => env('DB_USERNAME', 'root'),
+            'password' => env('DB_PASSWORD', ''),
+        ],
+
+        'mysql_shard_3_replica_migrator' => [
+            'driver' => 'mysql',
+            'host' => env('DB_HOST_SHARD_3', '127.0.0.1'),
+            'port' => env('DB_PORT', '3307'),
+            'database' => env('DB_DATABASE_SHARD_3_REPLICA', 'ads_shard_no_3_replica'),
+            'username' => env('DB_USERNAME', 'root'),
+            'password' => env('DB_PASSWORD', ''),
+        ],
+        /* DB_HOST = 127.0 .0 .1
+        DB_PORT = 3307
+        #DB_DATABASE=ads_shard_no_1
+        DB_DATABASE_SHARD_1 = ads_shard_no_1
+        DB_DATABASE_SHARD_2 = ads_shard_no_2
+        DB_DATABASE_SHARD_3 = ads_shard_no_3
+        DB_DATABASE_SHARD_1_REPLICA = ads_shard_no_1_replica
+        DB_DATABASE_SHARD_2_REPLICA = ads_shard_no_2_replica
+        DB_DATABASE_SHARD_3_REPLICA = ads_shard_no_3_replica
+        DB_USERNAME = root
+        DB_PASSWORD = */
+        
         'mysql' => [
             'driver' => 'mysql',
             'url' => env('DB_URL'),
