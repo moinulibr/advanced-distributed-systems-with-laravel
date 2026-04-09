@@ -52,13 +52,13 @@ return [
             'driver' => 'mysql',
             'host' => env('DB_HOST_SHARD_1', '127.0.0.1'),
             'port' => env('DB_PORT', '3306'),
-            #'database' => env('DB_DATABASE_SHARD_1', 'ads_shard_no_1'),
-            'write' => [
+            'database' => env('DB_DATABASE_SHARD_1', 'ads_shard_no_1'),
+            /* 'write' => [
                 'database' => env('DB_DATABASE_SHARD_1', 'ads_shard_no_1'),
             ],
             'read' => [
                 'database' => env('DB_DATABASE_SHARD_1_REPLICA', 'ads_shard_no_1_replica'),
-            ],
+            ], */
             'username' => env('DB_USERNAME', 'root'),
             'password' => env('DB_PASSWORD', ''),
             'charset' => 'utf8mb4',
@@ -70,13 +70,13 @@ return [
             'driver' => 'mysql',
             'host' => env('DB_HOST_SHARD_2', '127.0.0.1'),
             'port' => env('DB_PORT', '3306'),
-            #'database' => env('DB_DATABASE_SHARD_2', 'ads_shard_no_2'),
-            'write' => [
+            'database' => env('DB_DATABASE_SHARD_2', 'ads_shard_no_2'),
+            /* 'write' => [
                 'database' => env('DB_DATABASE_SHARD_2', 'ads_shard_no_2'),
             ],
             'read' => [
                 'database' => env('DB_DATABASE_SHARD_2_REPLICA', 'ads_shard_no_2_replica'),
-            ],
+            ], */
             'username' => env('DB_USERNAME', 'root'),
             'password' => env('DB_PASSWORD', ''),
             // ... same as above

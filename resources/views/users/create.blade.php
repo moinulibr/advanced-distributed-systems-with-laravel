@@ -4,29 +4,60 @@
 
 <div class="card">
 
-<h3>{{ isset($user) ? 'Edit User' : 'Create User' }}</h3>
+<h2>Create User</h2>
 
-<form method="POST" action="{{ isset($user) ? route('user.update',$user->id) : route('user.store') }}">
+@if ($errors->any())
+    <div style="background:#ffecec;padding:10px;border-radius:6px;margin-bottom:10px;">
+        <ul style="margin:0;">
+            @foreach ($errors->all() as $error)
+                <li style="color:red;">{{ $error }}</li>
+            @endforeach
+        </ul>
+    </div>
+@endif
+
+<form method="POST" action="{{ route('user.store') }}">
 @csrf
-@if(isset($user)) @method('PUT') @endif
 
 <div class="flex">
-    <input type="text" name="name" placeholder="Name" value="{{ $user->name ?? '' }}">
-    <input type="email" name="email" placeholder="Email" value="{{ $user->email ?? '' }}">
+    <div style="width:100%">
+        <label>Name</label>
+        <input type="text" name="name" value="{{ old('name') }}">
+    </div>
+
+    <div style="width:100%">
+        <label>Email</label>
+        <input type="email" name="email" value="{{ old('email') }}">
+    </div>
 </div>
 
 <div class="flex">
-    <input type="text" name="phone" placeholder="Phone" value="{{ $user->phone ?? '' }}">
-    <input type="password" name="password" placeholder="Password">
+    <div style="width:100%">
+        <label>Phone</label>
+        <input type="text" name="phone" value="{{ old('phone') }}">
+    </div>
+
+    <div style="width:100%">
+        <label>Password</label>
+        <input type="password" name="password">
+    </div>
 </div>
 
 <h4>Profile</h4>
 
-<textarea name="address" placeholder="Address">{{ $user->profile->address ?? '' }}</textarea>
+<label>Address</label>
+<textarea name="address">{{ old('address') }}</textarea>
 
 <div class="flex">
-    <input type="text" name="bio" placeholder="Bio" value="{{ $user->profile->bio ?? '' }}">
-    <input type="text" name="city" placeholder="City" value="{{ $user->profile->city ?? '' }}">
+    <div style="width:100%">
+        <label>Bio</label>
+        <input type="text" name="bio" value="{{ old('bio') }}">
+    </div>
+
+    <div style="width:100%">
+        <label>City</label>
+        <input type="text" name="city" value="{{ old('city') }}">
+    </div>
 </div>
 
 <br>

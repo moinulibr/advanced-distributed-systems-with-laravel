@@ -4,7 +4,7 @@ namespace App\Services;
 
 use Illuminate\Support\Facades\Log;
 
-class ShardingService
+class ShardingServiceCustomable
 {
     /**
      * Handles all BD phone formats (+88, 88, 0088) and converts them to standard 11 digits.
@@ -37,11 +37,20 @@ class ShardingService
     /**
      * Determine the database shard based on sanitized phone number and email address.
      */
-    public static function getShard(string $identifier): string
+    public static function getShard(string $cleanPhone, string $email): string
     {
-        $hash = abs(crc32($identifier));
-        $shardIndex = ($hash % 3) + 1;
-        return "mysql_shard_" . $shardIndex;
+        $prefix = substr($cleanPhone, 0, 3);
+        $firstLetter = strtolower($email[0] ?? 'a');
+
+        if (in_array($prefix, ['013', '017']) || ($firstLetter >= 'a' && $firstLetter <= 'j')) {
+            return 'mysql_shard_1';
+        }
+
+        if (in_array($prefix, ['014', '019', '015']) || ($firstLetter >= 'k' && $firstLetter <= 'r')) {
+            return 'mysql_shard_2';
+        }
+
+        return 'mysql_shard_3';
     }
 
     /**

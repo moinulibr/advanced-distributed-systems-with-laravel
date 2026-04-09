@@ -2,6 +2,8 @@
 
 namespace Database\Seeders;
 
+use App\Models\User;
+use App\Models\UserProfile;
 use Illuminate\Database\Seeder;
 use Illuminate\Support\Facades\DB;
 use App\Services\ShardingService;
@@ -13,75 +15,53 @@ class DistributedUserSeeder extends Seeder
 {
     public function run(): void
     {
-        $faker = Faker::create('en_US');
+        $faker = Faker::create();
         $totalUsers = 100000;
-        $batchSize = 2500; // Increased batch size for better performance
+        $batchSize = 1000; // managing the batch size for better performance
 
-        // Data holders organized by shard
-        $shards = [
-            'mysql_shard_1' => ['users' => [], 'profiles' => []],
-            'mysql_shard_2' => ['users' => [], 'profiles' => []],
-            'mysql_shard_3' => ['users' => [], 'profiles' => []]
-        ];
+        $this->command->info("🚀 Starting seed: $totalUsers users across shards...");
 
-        $this->command->info("Starting massive data distribution (100k users)...");
+        for ($i = 0; $i < ($totalUsers / $batchSize); $i++) {
+            foreach (range(1, $batchSize) as $j) {
+                $email = $faker->unique()->safeEmail;
+                $phone = "01" . mt_rand(100000000, 999999999);
 
-        for ($i = 1; $i <= $totalUsers; $i++) {
-            // 1. Generate a unique safe email
-            $email = $faker->unique()->safeEmail;
+                //1. Shard determine by code based logic
+                //$shard = ShardingService::getShard($phone, $email);
+                $shard = ShardingService::getShard($email);
 
-            // 2. Generate a random BD phone number in various formats
-            $rawPhone = $this->generateBDPhone($faker);
+                // 2. Connection the certain shard by using Eloquent Model
+                $user = new User();
+                $user->setConnection($shard);
 
-            // 3. Sanitize the phone number
-            $cleanPhone = ShardingService::sanitizePhone($rawPhone);
+                $createdAt = Carbon::now()->subMonths(rand(0, 18));
 
-            // Skip if the phone number format is still invalid after sanitization
-            if (!$cleanPhone) {
-                //Log::warning("Invalid format skipped: $rawPhone");
-                continue;
+                $user->fill([
+                    'name' => $faker->name,
+                    'email' => $email,
+                    'phone' => $phone,
+                    'shard_key' => $shard,
+                    'created_at' => $createdAt,
+                    'updated_at' => $createdAt,
+                ]);
+                $user->save();
+
+                // 3. ready the profile in the same shard
+                $profile = new UserProfile();
+                $profile->setConnection($shard);
+                $profile->fill([
+                    'user_id' => $user->id,
+                    'address' => $faker->address,
+                    'city' => $faker->city,
+                    'created_at' => $createdAt,
+                ]);
+                $profile->save();
             }
 
-            // 4. Select the appropriate shard using the clean phone number
-            $shard = ShardingService::getShard($cleanPhone, $email);
-
-            // 5. Generate random date (between 2024-2026) for partitioning tests
-            $createdAt = Carbon::now()->subMonths(rand(0, 36));
-
-            // 6. Prepare User data
-            $shards[$shard]['users'][] = [
-                'id'         => $i,
-                'name'       => $faker->name,
-                'email'      => $email,
-                'phone'      => $cleanPhone,
-                'shard_key'  => $shard,
-                'created_at' => $createdAt,
-                'updated_at' => $createdAt,
-            ];
-
-            // 7. Prepare Profile data (Relational table)
-            $shards[$shard]['profiles'][] = [
-                'user_id'    => $i,
-                'address'    => $faker->address,
-                'bio'        => $faker->sentence,
-                'city'       => $faker->city,
-                'created_at' => $createdAt,
-                'updated_at' => $createdAt,
-            ];
-
-            // Batch insert logic to save memory and reduce DB calls
-            if (count($shards[$shard]['users']) >= $batchSize) {
-                $this->insertToShard($shard, $shards[$shard]);
-                $shards[$shard] = ['users' => [], 'profiles' => []]; // Reset batch
-            }
+            $this->command->comment("✔ Inserted " . (($i + 1) * $batchSize) . " users...");
         }
 
-        // Insert remaining records in the holders
-        foreach ($shards as $shardName => $data) {
-            $this->insertToShard($shardName, $data);
-        }
-
-        $this->command->info("100,000 Users and Profiles successfully distributed!");
+        $this->command->info("🎉 Seeding Completed!");
     }
 
     /**

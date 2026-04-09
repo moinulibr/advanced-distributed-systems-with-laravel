@@ -9,7 +9,7 @@
 
         <div class="search-box">
             <form method="GET" action="{{ route('user.index') }}" class="search-box">
-                <input type="text" name="phone" placeholder="Search phone..." value="{{ request('phone') }}">
+                <input type="text" name="email" placeholder="Search by email..." value="{{ request('email') }}">
                 <button class="btn btn-primary">Search</button>
             </form>
 
@@ -63,6 +63,9 @@
             @endforelse
             </tbody>
         </table>
+        <div style="margin-top:15px;">
+            {{-- {{ $users->links() }} --}}
+        </div>
     </div>
 
 </div>

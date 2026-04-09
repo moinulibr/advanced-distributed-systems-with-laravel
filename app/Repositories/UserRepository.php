@@ -2,36 +2,52 @@
 
 namespace App\Repositories;
 
+use App\Models\User;
+use App\Models\UserProfile;
 use App\Repositories\Interfaces\UserRepositoryInterface;
 use App\Services\ShardingService;
 use Illuminate\Support\Facades\DB;
 
 class UserRepository implements UserRepositoryInterface
 {
-    
     /**
-     * Aggregates users from all shards with simple pagination
+     * Aggregates users from all shards with pagination logic
      */
     public function allUsers($perPage = 15)
     {
         $allUsers = collect();
 
         foreach (ShardingService::getAllShards() as $shard) {
-            $users = DB::connection($shard)->table('users')
+            // Eloquent 'on' method ব্যবহার করে প্রতিটি শার্ড থেকে ডেটা আনা
+            $users = User::on($shard)
+                ->with('profile')
                 ->orderBy('created_at', 'desc')
-                ->limit($perPage) // Each shard will contribute some data
+                ->limit($perPage)
                 ->get();
 
             $allUsers = $allUsers->concat($users);
         }
 
-        // Sort globally by creation date and take the required amount
-        return $allUsers->sortByDesc('created_at')->values()->all();
+        // গ্লোবালি সর্ট করে ফাইনাল ডেটা রিটার্ন
+        return $allUsers->sortByDesc('created_at')->values()->take($perPage)->all();
     }
 
+    /**
+     * Search user by email (Direct lookup - FAST)
+     */
+    public function findByEmail(string $email)
+    {
+        // যেহেতু ইমেইল আমাদের বেস, আমরা সরাসরি শার্ড ক্যালকুলেট করছি
+        $shard = ShardingService::getShard($email);
+
+        return User::on($shard)
+            ->where('email', $email)
+            ->with('profile')
+            ->first();
+    }
 
     /**
-     * Search user by phone across all shards
+     * Search user by phone (Global lookup - Cross-shard)
      */
     public function findByPhone(string $phone)
     {
@@ -39,80 +55,59 @@ class UserRepository implements UserRepositoryInterface
         if (!$cleanPhone) return null;
 
         foreach (ShardingService::getAllShards() as $shard) {
-            $user = DB::connection($shard)->table('users')
+            $user = User::on($shard)
                 ->where('phone', $cleanPhone)
+                ->with('profile')
                 ->first();
 
-            if ($user) {
-                $user->profile = DB::connection($shard)->table('user_profiles')
-                    ->where('user_id', $user->id)
-                    ->first();
-                return $user;
-            }
+            if ($user) return $user;
         }
         return null;
     }
 
     /**
-     * Search user by email across all shards
-     */
-    public function findByEmail(string $email)
-    {
-        foreach (ShardingService::getAllShards() as $shard) {
-            $user = DB::connection($shard)->table('users')
-                ->where('email', $email)
-                ->first();
-
-            if ($user) {
-                $user->profile = DB::connection($shard)->table('user_profiles')
-                    ->where('user_id', $user->id)
-                    ->first();
-                return $user;
-            }
-        }
-        return null;
-    }
-
-    /**
-     * Create a new user in the specific shard
+     * Create a new user in the specific shard using Eloquent
      */
     public function create(array $data)
     {
-        $cleanPhone = ShardingService::sanitizePhone($data['phone']);
-        $shard = ShardingService::getShard($cleanPhone, $data['email']);
+        $shard = ShardingService::getShard($data['email']);
 
-        return DB::connection($shard)->transaction(function () use ($shard, $data, $cleanPhone) {
-            $userId = DB::connection($shard)->table('users')->insertGetId([
-                'name' => $data['name'],
-                'email' => $data['email'],
-                'phone' => $cleanPhone,
+        return DB::connection($shard)->transaction(function () use ($shard, $data) {
+            // User Instance
+            $user = new User();
+            $user->setConnection($shard);
+
+            $user->fill([
+                'name'      => $data['name'],
+                'email'     => $data['email'],
+                'phone'     => ShardingService::sanitizePhone($data['phone']),
                 'shard_key' => $shard,
                 'created_at' => now(),
-                'updated_at' => now(),
             ]);
+            $user->save();
 
-            DB::connection($shard)->table('user_profiles')->insert([
-                'user_id' => $userId,
+            // Profile Create using Eloquent Relationship
+            $user->profile()->create([
                 'address' => $data['address'] ?? null,
-                'city' => $data['city'] ?? null,
-                'created_at' => now(),
-                'updated_at' => now(),
+                'city'    => $data['city'] ?? null,
             ]);
 
-            return $userId;
+            return $user->id;
         });
     }
 
     /**
-     * Update user in the specific shard
+     * Update user - Shard identified by EMAIL
      */
     public function update(int $id, array $data, string $phone, string $email)
     {
-        $shard = ShardingService::getShard($phone, $email);
+        $shard = ShardingService::getShard($email);
 
-        return DB::connection($shard)->table('users')
-            ->where('id', $id)
-            ->update(array_merge($data, ['updated_at' => now()]));
+        $user = User::on($shard)->find($id);
+        if ($user) {
+            return $user->update($data);
+        }
+        return false;
     }
 
     /**
@@ -120,11 +115,16 @@ class UserRepository implements UserRepositoryInterface
      */
     public function delete(int $id, string $phone, string $email)
     {
-        $shard = ShardingService::getShard($phone, $email);
+        $shard = ShardingService::getShard($email);
 
         return DB::connection($shard)->transaction(function () use ($shard, $id) {
-            DB::connection($shard)->table('user_profiles')->where('user_id', $id)->delete();
-            return DB::connection($shard)->table('users')->where('id', $id)->delete();
+            $user = User::on($shard)->find($id);
+            if ($user) {
+                // রিলেশনসহ ডিলিট
+                $user->profile()->delete();
+                return $user->delete();
+            }
+            return false;
         });
     }
 }
