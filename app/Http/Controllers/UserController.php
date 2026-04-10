@@ -38,7 +38,7 @@ class UserController extends Controller
      */
     public function search($identifier)
     {
-        // যদি ইনপুটটি ইমেইল হয়
+        // if you want to search by email
         if (filter_var($identifier, FILTER_VALIDATE_EMAIL)) {
             $user = $this->userRepo->findByEmail($identifier);
         } else {
