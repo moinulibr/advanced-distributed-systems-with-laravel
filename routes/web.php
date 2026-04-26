@@ -52,6 +52,22 @@ Route::get('/redis-test', function () {
     Redis::hset('pureolaa:product:1', 'name', 'Pure Honey');
     Redis::hset('pureolaa:product:1', 'price', '500');
     Redis::hset('pureolaa:product:1', 'stock', '25');
-    
+
     return "সফলভাবে ডেটা রেডিসে পাঠানো হয়েছে। বর্তমান ভিউ সংখ্যা: " . $views;
+});
+Route::get('/get-redis-data', function () {
+    // ১. স্ট্রিং ডেটা তুলে আনা
+    $skill = Redis::get('moinul:skill');
+
+    // ২. কাউন্টার ভ্যালু দেখা
+    $views = Redis::get('live_visitor_count');
+
+    // ৩. লিস্টের সব ডেটা দেখা (০ থেকে -১ মানে শুরু থেকে শেষ পর্যন্ত)
+    $notifications = Redis::lrange('notifications', 0, -1);
+
+    return [
+        'skill' => $skill,
+        'total_views' => $views,
+        'notifications' => $notifications
+    ];
 });
