@@ -25,6 +25,9 @@ Route::prefix('users')->group(function () {
 
 
 Route::get('/redis-test', function () {
+
+    //crc32 = it's return 10 digits of integer value 
+
     // ১. সরাসরি রেডিস মেথড ব্যবহার (String)
     Redis::set('moinul:skill', 'Mastering Redis');
 
