@@ -30,8 +30,11 @@ Route::get('/redis-test', function () {
     //crs64 = it's return 16/18 digits of integer value 
     //String - SET/GET , INCR/DECR, SETEX/PEXPIRE
     //Hashes - HSET/HGET, HINCRBY, HEXPIRE, HDEL, HGETALL
+    //Lists - LPUSH/LPOP/LRANGE/LLEN, RPUSH/RPOP, 
+    //SADD/SISMEMBER/SMEMBERS, SINTER, SREM, SISMEMBER
+    //Bitmaps - SETBIT/GETBIT, BITCOUNT, BITPOS, BITFIELD, BITOP, BITOR, BITAND, BITNOT, BITCLEAR
 
-    
+
     // ১. সরাসরি রেডিস মেথড ব্যবহার (String)
     Redis::set('moinul:skill', 'Mastering Redis');
 
