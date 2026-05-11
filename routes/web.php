@@ -29,6 +29,7 @@ Route::get('/redis-test', function () {
     //crc32 = it's return 10 digits of integer value
     //crs64 = it's return 16/18 digits of integer value 
     //String - SET/GET , INCR/DECR, SETEX/PEXPIRE
+    //Hashes - HSET/HGET, HINCRBY, HEXPIRE, HDEL, HGETALL
 
     
     // ১. সরাসরি রেডিস মেথড ব্যবহার (String)
