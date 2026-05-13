@@ -28,6 +28,8 @@ Route::get('/redis-test', function () {
 
     //crc32 = it's return 10 digits of integer value
     //crs64 = it's return 16/18 digits of integer value 
+
+        // all are the redis methods
     //String - SET/GET , INCR/DECR, SETEX/PEXPIRE
     //Hashes - HSET/HGET, HINCRBY, HEXPIRE, HDEL, HGETALL
     //Lists - LPUSH/LPOP/LRANGE/LLEN, RPUSH/RPOP, 
