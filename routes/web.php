@@ -67,6 +67,8 @@ Route::get('/redis-test', function () {
 
     return "সফলভাবে ডেটা রেডিসে পাঠানো হয়েছে। বর্তমান ভিউ সংখ্যা: " . $views;
 });
+
+// get all redis data
 Route::get('/get-redis-data', function () {
     // ১. স্ট্রিং ডেটা তুলে আনা
     $skill = Redis::get('moinul:skill');
